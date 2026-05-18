@@ -51,13 +51,17 @@ const updateProduct = async (req, res) => {
     const product = await Product.findById(req.params.id);
 
     if (product) {
+      if (req.user.role !== 'admin' && product.seller?.toString() !== req.user._id.toString()) {
+        return res.status(401).json({ message: 'Not authorized to update this product' });
+      }
+
       product.title = req.body.title || product.title;
       product.author = req.body.author || product.author;
       product.description = req.body.description || product.description;
       product.price = req.body.price || product.price;
       product.category = req.body.category || product.category;
       product.pages = req.body.pages || product.pages;
-      product.stock = req.body.stock || product.stock;
+      product.stock = req.body.stock != null ? req.body.stock : product.stock;
       if (req.files?.image) {
         product.image = '/uploads/' + req.files.image[0].filename;
       }
@@ -80,6 +84,9 @@ const deleteProduct = async (req, res) => {
     const product = await Product.findById(req.params.id);
 
     if (product) {
+      if (req.user.role !== 'admin' && product.seller?.toString() !== req.user._id.toString()) {
+        return res.status(401).json({ message: 'Not authorized to delete this product' });
+      }
       await Product.deleteOne({ _id: req.params.id });
       res.json({ message: 'Product removed' });
     } else {

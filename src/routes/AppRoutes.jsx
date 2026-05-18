@@ -3,6 +3,7 @@ import Home from '../pages/Home';
 import Login from '../pages/Login';
 import Register from '../pages/Register';
 import ProductDetails from '../pages/ProductDetails';
+import Products from '../pages/Products';
 import Dashboard from '../pages/Dashboard';
 import Cart from '../pages/Cart';
 import About from '../pages/About';
@@ -18,6 +19,7 @@ const AppRoutes = () => {
       <Route path="/register" element={<Register />} />
       <Route path="/about" element={<About />} />
       <Route path="/contact" element={<Contact />} />
+      <Route path="/products" element={<Products />} />
       <Route path="/product/:id" element={<ProductDetails />} />
       <Route path="/cart" element={<Cart />} />
       <Route

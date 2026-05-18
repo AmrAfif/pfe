@@ -1,4 +1,6 @@
 const Order = require('../models/Order');
+const Product = require('../models/Product');
+const User = require('../models/User');
 
 const createOrder = async (req, res) => {
   const { orderItems, totalPrice } = req.body;
@@ -57,7 +59,6 @@ const getSellerOrders = async (req, res) => {
 const updateOrderToDelivered = async (req, res) => {
   try {
     const order = await Order.findById(req.params.id);
-
     if (order) {
       order.status = 'completed';
       const updatedOrder = await order.save();
@@ -70,11 +71,16 @@ const updateOrderToDelivered = async (req, res) => {
   }
 };
 
-const getUsers = async (req, res) => {
+const cancelOrder = async (req, res) => {
   try {
-    const User = require('../models/User');
-    const users = await User.find({}).select('-password');
-    res.json(users);
+    const order = await Order.findById(req.params.id);
+    if (order) {
+      order.status = 'cancelled';
+      const updatedOrder = await order.save();
+      res.json(updatedOrder);
+    } else {
+      res.status(404).json({ message: 'Order not found' });
+    }
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -82,12 +88,11 @@ const getUsers = async (req, res) => {
 
 const getDashboardStats = async (req, res) => {
   try {
-    const Product = require('../models/Product');
-    const User = require('../models/User');
     const totalProducts = await Product.countDocuments();
     const totalOrders = await Order.countDocuments();
     const totalUsers = await User.countDocuments();
     const totalRevenue = await Order.aggregate([
+      { $match: { status: 'completed' } },
       { $group: { _id: null, total: { $sum: '$totalPrice' } } },
     ]);
     res.json({
@@ -107,6 +112,6 @@ module.exports = {
   getOrders,
   getSellerOrders,
   updateOrderToDelivered,
-  getUsers,
+  cancelOrder,
   getDashboardStats,
 };

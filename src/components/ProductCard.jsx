@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { ShoppingCart, BookOpen } from 'lucide-react';
 
 const ProductCard = ({ product }) => {
   const { addToCart, user } = useAuth();
@@ -24,17 +25,18 @@ const ProductCard = ({ product }) => {
               onError={(e) => {
                 e.target.style.display = 'none';
                 e.target.parentElement.classList.add('flex', 'items-center', 'justify-center');
-                e.target.parentElement.innerHTML = `<svg class="w-16 h-16 text-library-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}><path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" /></svg>`;
+                const fallback = document.createElement('div');
+                fallback.className = 'flex items-center justify-center w-full h-full';
+                fallback.innerHTML = '<svg class="w-16 h-16 text-library-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"/></svg>';
+                e.target.parentElement.appendChild(fallback);
               }}
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
-              <svg className="w-16 h-16 text-library-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
-              </svg>
+              <BookOpen className="w-16 h-16 text-library-300" />
             </div>
           )}
-          <span className="absolute top-3 left-3 bg-white/90 text-ink-700 text-xs px-2 py-1 rounded-full font-medium">
+          <span className="absolute top-3 left-3 bg-white/90 text-ink-700 text-xs px-2.5 py-1 rounded-full font-medium backdrop-blur-sm">
             {product.category}
           </span>
         </div>
@@ -55,12 +57,10 @@ const ProductCard = ({ product }) => {
           <span className="text-xl font-bold text-library-600">${product.price}</span>
           <button
             onClick={handleAddToCart}
-            className="px-3 py-2 bg-library-500 text-white rounded-lg text-sm font-medium hover:bg-library-600 transition-colors flex items-center gap-1"
+            className="px-3 py-2 bg-library-500 text-white rounded-lg text-sm font-medium hover:bg-library-600 transition-colors flex items-center gap-1.5"
           >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-            </svg>
-            Add to Cart
+            <ShoppingCart className="w-4 h-4" />
+            Cart
           </button>
         </div>
       </div>
