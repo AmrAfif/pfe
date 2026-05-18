@@ -1,9 +1,5 @@
 const Order = require('../models/Order');
-const Product = require('../models/Product');
 
-// @desc    Create new order
-// @route   POST /api/orders
-// @access  Private
 const createOrder = async (req, res) => {
   const { orderItems, totalPrice } = req.body;
 
@@ -26,33 +22,38 @@ const createOrder = async (req, res) => {
   }
 };
 
-// @desc    Get logged in user orders
-// @route   GET /api/orders/myorders
-// @access  Private
 const getMyOrders = async (req, res) => {
   try {
-    const orders = await Order.find({ user: req.user._id }).populate('user', 'name email');
+    const orders = await Order.find({ user: req.user._id }).populate('products.product', 'title price image');
     res.json(orders);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-// @desc    Get all orders
-// @route   GET /api/orders
-// @access  Private/Admin
 const getOrders = async (req, res) => {
   try {
-    const orders = await Order.find({}).populate('user', 'name email');
+    const orders = await Order.find({}).populate('user', 'name email').populate('products.product', 'title price');
     res.json(orders);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-// @desc    Update order to delivered
-// @route   PUT /api/orders/:id/deliver
-// @access  Private/Admin
+const getSellerOrders = async (req, res) => {
+  try {
+    const orders = await Order.find({}).populate('user', 'name email').populate('products.product', 'title price seller');
+    const filtered = orders.filter(order =>
+      order.products.some(p =>
+        p.product?.seller?.toString() === req.user._id.toString()
+      )
+    );
+    res.json(filtered);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 const updateOrderToDelivered = async (req, res) => {
   try {
     const order = await Order.findById(req.params.id);
@@ -69,9 +70,43 @@ const updateOrderToDelivered = async (req, res) => {
   }
 };
 
+const getUsers = async (req, res) => {
+  try {
+    const User = require('../models/User');
+    const users = await User.find({}).select('-password');
+    res.json(users);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+const getDashboardStats = async (req, res) => {
+  try {
+    const Product = require('../models/Product');
+    const User = require('../models/User');
+    const totalProducts = await Product.countDocuments();
+    const totalOrders = await Order.countDocuments();
+    const totalUsers = await User.countDocuments();
+    const totalRevenue = await Order.aggregate([
+      { $group: { _id: null, total: { $sum: '$totalPrice' } } },
+    ]);
+    res.json({
+      totalProducts,
+      totalOrders,
+      totalUsers,
+      totalRevenue: totalRevenue[0]?.total || 0,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   createOrder,
   getMyOrders,
   getOrders,
+  getSellerOrders,
   updateOrderToDelivered,
+  getUsers,
+  getDashboardStats,
 };

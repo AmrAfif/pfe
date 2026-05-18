@@ -1,23 +1,17 @@
 const Product = require('../models/Product');
 
-// @desc    Get all products
-// @route   GET /api/products
-// @access  Public
 const getProducts = async (req, res) => {
   try {
-    const products = await Product.find({});
+    const products = await Product.find({}).populate('seller', 'name email');
     res.json(products);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-// @desc    Get single product
-// @route   GET /api/products/:id
-// @access  Public
 const getProductById = async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id);
+    const product = await Product.findById(req.params.id).populate('seller', 'name email');
     if (product) {
       res.json(product);
     } else {
@@ -28,19 +22,21 @@ const getProductById = async (req, res) => {
   }
 };
 
-// @desc    Create a product
-// @route   POST /api/products
-// @access  Private/Admin
 const createProduct = async (req, res) => {
-  const { title, description, price, fileUrl, category } = req.body;
+  const { title, author, description, price, category, pages, stock } = req.body;
 
   try {
     const product = new Product({
       title,
+      author,
       description,
       price,
-      fileUrl,
       category,
+      pages,
+      stock,
+      image: req.files?.image ? '/uploads/' + req.files.image[0].filename : '',
+      fileUrl: req.files?.file ? '/uploads/' + req.files.file[0].filename : '',
+      seller: req.user._id,
     });
 
     const createdProduct = await product.save();
@@ -50,21 +46,24 @@ const createProduct = async (req, res) => {
   }
 };
 
-// @desc    Update a product
-// @route   PUT /api/products/:id
-// @access  Private/Admin
 const updateProduct = async (req, res) => {
-  const { title, description, price, fileUrl, category } = req.body;
-
   try {
     const product = await Product.findById(req.params.id);
 
     if (product) {
-      product.title = title || product.title;
-      product.description = description || product.description;
-      product.price = price || product.price;
-      product.fileUrl = fileUrl || product.fileUrl;
-      product.category = category || product.category;
+      product.title = req.body.title || product.title;
+      product.author = req.body.author || product.author;
+      product.description = req.body.description || product.description;
+      product.price = req.body.price || product.price;
+      product.category = req.body.category || product.category;
+      product.pages = req.body.pages || product.pages;
+      product.stock = req.body.stock || product.stock;
+      if (req.files?.image) {
+        product.image = '/uploads/' + req.files.image[0].filename;
+      }
+      if (req.files?.file) {
+        product.fileUrl = '/uploads/' + req.files.file[0].filename;
+      }
 
       const updatedProduct = await product.save();
       res.json(updatedProduct);
@@ -76,19 +75,25 @@ const updateProduct = async (req, res) => {
   }
 };
 
-// @desc    Delete a product
-// @route   DELETE /api/products/:id
-// @access  Private/Admin
 const deleteProduct = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
 
     if (product) {
-      await product.remove();
+      await Product.deleteOne({ _id: req.params.id });
       res.json({ message: 'Product removed' });
     } else {
       res.status(404).json({ message: 'Product not found' });
     }
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+const getMyProducts = async (req, res) => {
+  try {
+    const products = await Product.find({ seller: req.user._id });
+    res.json(products);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -100,4 +105,5 @@ module.exports = {
   createProduct,
   updateProduct,
   deleteProduct,
+  getMyProducts,
 };

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
 import axios from '../api/axios';
 
 const AuthContext = createContext();
@@ -10,26 +10,28 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [cart, setCart] = useState([]);
+  const [cart, setCart] = useState(() => {
+    const saved = localStorage.getItem('cart');
+    return saved ? JSON.parse(saved) : [];
+  });
 
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
-      // Verify token and get user
       axios.get('/auth/profile')
-        .then(res => {
-          setUser(res.data);
-        })
+        .then(res => setUser(res.data))
         .catch(() => {
           localStorage.removeItem('token');
         })
-        .finally(() => {
-          setLoading(false);
-        });
+        .finally(() => setLoading(false));
     } else {
       setLoading(false);
     }
   }, []);
+
+  useEffect(() => {
+    localStorage.setItem('cart', JSON.stringify(cart));
+  }, [cart]);
 
   const login = async (email, password) => {
     const res = await axios.post('/auth/login', { email, password });
@@ -75,6 +77,18 @@ export const AuthProvider = ({ children }) => {
     setCart([]);
   };
 
+  const updateQuantity = (productId, quantity) => {
+    if (quantity < 1) {
+      removeFromCart(productId);
+      return;
+    }
+    setCart(prev =>
+      prev.map(item =>
+        item._id === productId ? { ...item, quantity } : item
+      )
+    );
+  };
+
   const value = {
     user,
     login,
@@ -84,6 +98,7 @@ export const AuthProvider = ({ children }) => {
     addToCart,
     removeFromCart,
     clearCart,
+    updateQuantity,
     loading,
   };
 
