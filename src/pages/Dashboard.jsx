@@ -1,6 +1,8 @@
 import { useEffect, useState, useCallback } from 'react';
 import axios from '../api/axios';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
+import { useConfirm } from '../context/ConfirmContext';
 import {
   LayoutDashboard, BookOpen, ShoppingBag, Users, Tags, Plus, Pencil, Trash2, X, Check,
   AlertCircle, Package, DollarSign, TrendingUp, UserPlus, BookMarked, Search,
@@ -85,6 +87,9 @@ const Dashboard = () => {
   const [userForm, setUserForm] = useState({ name: '', email: '', password: '', role: 'client' });
   const [userFormLoading, setUserFormLoading] = useState(false);
   const [userFormError, setUserFormError] = useState('');
+
+  const toast = useToast();
+  const { confirm } = useConfirm();
 
   // Fetch data
   const fetchData = useCallback(async () => {
@@ -199,12 +204,20 @@ const Dashboard = () => {
   };
 
   const handleDeleteProduct = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this product?')) return;
+    const confirmed = await confirm({
+      title: 'Delete product',
+      description: 'This action cannot be undone. Do you want to remove this product?',
+      confirmText: 'Delete product',
+      cancelText: 'Cancel',
+    });
+    if (!confirmed) return;
+
     try {
       await axios.delete(`/api/products/${id}`);
       setProducts(prev => prev.filter(p => p._id !== id));
+      toast.addToast('Product deleted successfully.', { type: 'success' });
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to delete product');
+      toast.addToast(err.response?.data?.message || 'Failed to delete product.', { type: 'error' });
     }
   };
 
@@ -213,8 +226,27 @@ const Dashboard = () => {
       if (status === 'completed') await axios.put(`/api/orders/${id}/deliver`);
       else await axios.put(`/api/orders/${id}/cancel`);
       setOrders(prev => prev.map(o => o._id === id ? { ...o, status } : o));
+      toast.addToast(`Order ${status === 'completed' ? 'completed' : 'cancelled'} successfully.`, { type: 'success' });
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to update order');
+      toast.addToast(err.response?.data?.message || 'Failed to update order.', { type: 'error' });
+    }
+  };
+
+  const handleDeleteOrder = async (id) => {
+    const confirmed = await confirm({
+      title: 'Delete order',
+      description: 'This order will be permanently removed. Continue?',
+      confirmText: 'Delete order',
+      cancelText: 'Cancel',
+    });
+    if (!confirmed) return;
+
+    try {
+      await axios.delete(`/api/orders/${id}`);
+      setOrders(prev => prev.filter(o => o._id !== id));
+      toast.addToast('Order deleted successfully.', { type: 'success' });
+    } catch (err) {
+      toast.addToast(err.response?.data?.message || 'Failed to delete order.', { type: 'error' });
     }
   };
 
@@ -233,14 +265,17 @@ const Dashboard = () => {
     try {
       if (editingCategory) {
         await axios.put(`/api/categories/${editingCategory._id}`, { name: categoryName.trim() });
+        toast.addToast('Category updated successfully.', { type: 'success' });
       } else {
         await axios.post('/api/categories', { name: categoryName.trim() });
+        toast.addToast('Category created successfully.', { type: 'success' });
       }
       resetCategoryForm();
       const res = await axios.get('/api/categories');
       setCategories(res.data);
     } catch (err) {
       setCatError(err.response?.data?.message || 'Failed to save category');
+      toast.addToast(err.response?.data?.message || 'Failed to save category.', { type: 'error' });
     } finally {
       setCatLoading(false);
     }
@@ -253,12 +288,20 @@ const Dashboard = () => {
   };
 
   const handleDeleteCategory = async (id) => {
-    if (!window.confirm('Delete this category?')) return;
+    const confirmed = await confirm({
+      title: 'Delete category',
+      description: 'This category will be permanently removed. Do you want to continue?',
+      confirmText: 'Delete category',
+      cancelText: 'Cancel',
+    });
+    if (!confirmed) return;
+
     try {
       await axios.delete(`/api/categories/${id}`);
       setCategories(prev => prev.filter(c => c._id !== id));
+      toast.addToast('Category deleted successfully.', { type: 'success' });
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to delete category');
+      toast.addToast(err.response?.data?.message || 'Failed to delete category.', { type: 'error' });
     }
   };
 
@@ -285,19 +328,22 @@ const Dashboard = () => {
     try {
       if (editingUser) {
         await axios.put(`/api/users/${editingUser._id}`, { role: userForm.role });
+        toast.addToast('User role updated successfully.', { type: 'success' });
       } else {
-        await axios.post('/api/auth/register', {
+        await axios.post('/api/users', {
           name: userForm.name,
           email: userForm.email,
           password: userForm.password,
           role: userForm.role || 'client',
         });
+        toast.addToast('User created successfully.', { type: 'success' });
       }
       resetUserForm();
       const res = await axios.get('/api/users');
       setUsers(res.data);
     } catch (err) {
       setUserFormError(err.response?.data?.message || 'Failed to save user');
+      toast.addToast(err.response?.data?.message || 'Failed to save user.', { type: 'error' });
     } finally {
       setUserFormLoading(false);
     }
@@ -311,12 +357,25 @@ const Dashboard = () => {
   };
 
   const handleDeleteUser = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this user?')) return;
+    if (!id) {
+      toast.addToast('Unable to delete user: invalid id.', { type: 'error' });
+      return;
+    }
+
+    const confirmed = await confirm({
+      title: 'Delete user',
+      description: 'This user will be permanently removed from the system.',
+      confirmText: 'Delete user',
+      cancelText: 'Cancel',
+    });
+    if (!confirmed) return;
+
     try {
       await axios.delete(`/api/users/${id}`);
       setUsers(prev => prev.filter(u => u._id !== id));
+      toast.addToast('User deleted successfully.', { type: 'success' });
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to delete user');
+      toast.addToast(err.response?.data?.message || 'Failed to delete user.', { type: 'error' });
     }
   };
 
@@ -777,6 +836,12 @@ const Dashboard = () => {
                             </>
                           )}
                           {order.status !== 'pending' && <span className="text-xs text-ink-300">&mdash;</span>}
+                          {isAdmin && (
+                            <button onClick={() => handleDeleteOrder(order._id)}
+                              className="text-xs bg-rose-50 text-rose-600 px-2.5 py-1.5 rounded-lg font-medium hover:bg-rose-100 transition-colors flex items-center gap-1">
+                              <Trash2 className="w-3 h-3" /> Delete
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -828,12 +893,12 @@ const Dashboard = () => {
                       <td className="py-3.5 px-4 text-ink-500 text-xs">{new Date(u.createdAt).toLocaleDateString()}</td>
                       <td className="py-3.5 px-4 text-right">
                         <div className="flex items-center justify-end gap-1">
-                          <button onClick={() => openEditUser(u)}
+                          <button type="button" onClick={() => openEditUser(u)}
                             className="p-2 text-ink-400 hover:text-library-500 hover:bg-library-50 rounded-lg transition-colors">
                             <Pencil className="w-4 h-4" />
                           </button>
                           {u.role !== 'admin' && (
-                            <button onClick={() => handleDeleteUser(u._id)}
+                            <button type="button" onClick={() => handleDeleteUser(u._id)}
                               className="p-2 text-ink-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors">
                               <Trash2 className="w-4 h-4" />
                             </button>

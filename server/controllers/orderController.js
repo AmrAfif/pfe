@@ -86,6 +86,20 @@ const cancelOrder = async (req, res) => {
   }
 };
 
+const deleteOrder = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+    if (order) {
+      await order.deleteOne();
+      res.json({ message: 'Order removed' });
+    } else {
+      res.status(404).json({ message: 'Order not found' });
+    }
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 const getDashboardStats = async (req, res) => {
   try {
     const totalProducts = await Product.countDocuments();
@@ -113,5 +127,6 @@ module.exports = {
   getSellerOrders,
   updateOrderToDelivered,
   cancelOrder,
+  deleteOrder,
   getDashboardStats,
 };
