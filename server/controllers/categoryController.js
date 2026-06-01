@@ -45,8 +45,8 @@ const updateCategory = async (req, res) => {
       return res.status(404).json({ message: 'Category not found' });
     }
     if (name) {
-      const existing = await Category.findOne({ name: { $regex: new RegExp('^' + name + '$', 'i'), _id: { $ne: req.params.id } } });
-      if (existing) {
+      const existing = await Category.findOne({ name: { $regex: new RegExp('^' + name + '$', 'i') } });
+      if (existing && existing._id.toString() !== req.params.id) {
         return res.status(400).json({ message: 'Category name already exists' });
       }
       category.name = name;

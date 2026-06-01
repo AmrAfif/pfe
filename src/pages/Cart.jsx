@@ -25,6 +25,14 @@ const Cart = () => {
     }
   };
 
+  const handleWhatsAppCheckout = () => {
+    const whatsappNumber = '212617986941';
+    const orderLines = cart.map(item => `- ${item.title} x${item.quantity} = $${(item.price * item.quantity).toFixed(2)}`).join('\n');
+    const message = `Hello, I would like to place an order.\n\n${user ? `Name: ${user.name}\n` : ''}Order details:\n${orderLines}\n\nTotal: $${totalPrice.toFixed(2)}\n\nPlease let me know how to proceed.`;
+    const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
+  };
+
   if (cart.length === 0) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
@@ -137,6 +145,12 @@ const Cart = () => {
               className="w-full mt-6 py-3 bg-library-500 text-white rounded-xl font-semibold hover:bg-library-600 transition-colors"
             >
               Proceed to Checkout
+            </button>
+            <button
+              onClick={handleWhatsAppCheckout}
+              className="w-full mt-3 py-3 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 transition-colors"
+            >
+              Checkout with WhatsApp
             </button>
             <Link
               to="/"
