@@ -91,20 +91,20 @@ const Dashboard = () => {
     setLoading(true);
     setError(null);
     try {
-      const promises = [axios.get('/categories')];
+      const promises = [axios.get('/api/categories')];
 
       if (isAdmin) {
         promises.push(
-          axios.get('/products'),
-          axios.get('/orders'),
-          axios.get('/orders/admin/stats'),
-          axios.get('/users'),
+          axios.get('/api/products'),
+          axios.get('/api/orders'),
+          axios.get('/api/orders/admin/stats'),
+          axios.get('/api/users'),
         );
       } else if (isSeller) {
         promises.push(
-          axios.get('/products/myproducts'),
-          axios.get('/orders/seller-orders'),
-          axios.get('/products'),
+          axios.get('/api/products/myproducts'),
+          axios.get('/api/orders/seller-orders'),
+          axios.get('/api/products'),
         );
       }
 
@@ -176,19 +176,19 @@ const Dashboard = () => {
       if (bookFile) fd.append('file', bookFile);
 
       if (editingProduct) {
-        await axios.put(`/products/${editingProduct._id}`, fd, {
+        await axios.put(`/api/products/${editingProduct._id}`, fd, {
           headers: { 'Content-Type': 'multipart/form-data' },
         });
       } else {
-        await axios.post('/products', fd, {
+        await axios.post('/api/products', fd, {
           headers: { 'Content-Type': 'multipart/form-data' },
         });
       }
 
       resetProductForm();
       const endpoint = isAdmin
-        ? axios.get('/products')
-        : axios.get('/products/myproducts');
+        ? axios.get('/api/products')
+        : axios.get('/api/products/myproducts');
       const res = await endpoint;
       setProducts(res.data);
     } catch (err) {
@@ -201,7 +201,7 @@ const Dashboard = () => {
   const handleDeleteProduct = async (id) => {
     if (!window.confirm('Are you sure you want to delete this product?')) return;
     try {
-      await axios.delete(`/products/${id}`);
+      await axios.delete(`/api/products/${id}`);
       setProducts(prev => prev.filter(p => p._id !== id));
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to delete product');
@@ -210,8 +210,8 @@ const Dashboard = () => {
 
   const handleOrderAction = async (id, status) => {
     try {
-      if (status === 'completed') await axios.put(`/orders/${id}/deliver`);
-      else await axios.put(`/orders/${id}/cancel`);
+      if (status === 'completed') await axios.put(`/api/orders/${id}/deliver`);
+      else await axios.put(`/api/orders/${id}/cancel`);
       setOrders(prev => prev.map(o => o._id === id ? { ...o, status } : o));
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to update order');
@@ -232,12 +232,12 @@ const Dashboard = () => {
     setCatError('');
     try {
       if (editingCategory) {
-        await axios.put(`/categories/${editingCategory._id}`, { name: categoryName.trim() });
+        await axios.put(`/api/categories/${editingCategory._id}`, { name: categoryName.trim() });
       } else {
-        await axios.post('/categories', { name: categoryName.trim() });
+        await axios.post('/api/categories', { name: categoryName.trim() });
       }
       resetCategoryForm();
-      const res = await axios.get('/categories');
+      const res = await axios.get('/api/categories');
       setCategories(res.data);
     } catch (err) {
       setCatError(err.response?.data?.message || 'Failed to save category');
@@ -255,7 +255,7 @@ const Dashboard = () => {
   const handleDeleteCategory = async (id) => {
     if (!window.confirm('Delete this category?')) return;
     try {
-      await axios.delete(`/categories/${id}`);
+      await axios.delete(`/api/categories/${id}`);
       setCategories(prev => prev.filter(c => c._id !== id));
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to delete category');
@@ -284,9 +284,9 @@ const Dashboard = () => {
     setUserFormError('');
     try {
       if (editingUser) {
-        await axios.put(`/users/${editingUser._id}`, { role: userForm.role });
+        await axios.put(`/api/users/${editingUser._id}`, { role: userForm.role });
       } else {
-        await axios.post('/auth/register', {
+        await axios.post('/api/auth/register', {
           name: userForm.name,
           email: userForm.email,
           password: userForm.password,
@@ -294,7 +294,7 @@ const Dashboard = () => {
         });
       }
       resetUserForm();
-      const res = await axios.get('/users');
+      const res = await axios.get('/api/users');
       setUsers(res.data);
     } catch (err) {
       setUserFormError(err.response?.data?.message || 'Failed to save user');
@@ -313,7 +313,7 @@ const Dashboard = () => {
   const handleDeleteUser = async (id) => {
     if (!window.confirm('Are you sure you want to delete this user?')) return;
     try {
-      await axios.delete(`/users/${id}`);
+      await axios.delete(`/api/users/${id}`);
       setUsers(prev => prev.filter(u => u._id !== id));
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to delete user');

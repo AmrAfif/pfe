@@ -8,7 +8,7 @@ const MyOrders = () => {
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const res = await axios.get('/orders/myorders');
+        const res = await axios.get('/api/orders/myorders');
         setOrders(res.data);
       } catch (error) {
         console.error('Error fetching orders:', error);

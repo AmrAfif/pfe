@@ -30,8 +30,8 @@ const Products = () => {
     const fetchData = async () => {
       try {
         const [prodRes, catRes] = await Promise.all([
-          axios.get('/products'),
-          axios.get('/categories'),
+          axios.get('/api/products'),
+          axios.get('/api/categories'),
         ]);
         setProducts(prodRes.data);
         setCategories(catRes.data);

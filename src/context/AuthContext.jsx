@@ -18,7 +18,7 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
-      axios.get('/auth/profile')
+      axios.get('/api/auth/profile')
         .then(res => setUser(res.data))
         .catch(() => {
           localStorage.removeItem('token');
@@ -34,7 +34,7 @@ export const AuthProvider = ({ children }) => {
   }, [cart]);
 
   const login = async (email, password) => {
-    const res = await axios.post('/auth/login', { email, password });
+    const res = await axios.post('/api/auth/login', { email, password });
     const { token, ...userData } = res.data;
     localStorage.setItem('token', token);
     setUser(userData);
@@ -42,7 +42,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const register = async (name, email, password, role = 'client') => {
-    const res = await axios.post('/auth/register', { name, email, password, role });
+    const res = await axios.post('/api/auth/register', { name, email, password, role });
     const { token, ...userData } = res.data;
     localStorage.setItem('token', token);
     setUser(userData);

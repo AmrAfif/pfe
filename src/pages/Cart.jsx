@@ -18,7 +18,7 @@ const Cart = () => {
         quantity: item.quantity,
       }));
 
-      await axios.post('/orders', { orderItems, totalPrice });
+      await axios.post('/api/orders', { orderItems, totalPrice });
       clearCart();
     } catch (error) {
       console.error('Error placing order:', error);

@@ -26,7 +26,7 @@ const Home = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const res = await axios.get('/products');
+        const res = await axios.get('/api/products');
         setProducts(res.data);
       } catch (error) {
         console.error('Error fetching products:', error);
